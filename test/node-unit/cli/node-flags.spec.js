@@ -1,7 +1,11 @@
 'use strict';
 
 const nodeEnvFlags = require('node-environment-flags');
-const {isNodeFlag, impliesNoTimeouts} = require('../../../lib/cli/node-flags');
+const {
+  isNodeFlag,
+  impliesNoTimeouts,
+  unparseNodeFlags
+} = require('../../../lib/cli/node-flags');
 
 describe('node-flags', function() {
   describe('isNodeFlag()', function() {
@@ -15,13 +19,28 @@ describe('node-flags', function() {
       });
     });
 
+    describe('when expecting leading dashes', function() {
+      it('should require leading dashes', function() {
+        expect(isNodeFlag('throw-deprecation', false), 'to be false');
+        expect(isNodeFlag('--throw-deprecation', false), 'to be true');
+      });
+
+      it('should return false for --require/-r', function() {
+        expect(isNodeFlag('--require', false), 'to be false');
+        expect(isNodeFlag('-r', false), 'to be false');
+      });
+    });
+
     describe('special cases', function() {
       it('should return true for flags starting with "preserve-symlinks"', function() {
         expect(isNodeFlag('preserve-symlinks'), 'to be true');
         expect(isNodeFlag('preserve-symlinks-main'), 'to be true');
-        // XXX this is not true in some newer versions of Node.js.  figure out where
-        // this changed.
-        expect(isNodeFlag('preserve_symlinks'), 'to be false');
+        // Node >= v12 both flags exist in process.allowedNodeEnvironmentFlags
+        const nodeVersion = parseInt(process.version.match(/^v(\d+)\./)[1], 10);
+        expect(
+          isNodeFlag('preserve_symlinks'),
+          nodeVersion >= 12 ? 'to be true' : 'to be false'
+        );
       });
 
       it('should return true for flags starting with "harmony-" or "harmony_"', function() {
@@ -67,11 +86,51 @@ describe('node-flags', function() {
   });
 
   describe('impliesNoTimeouts()', function() {
-    it('should return true for debug/inspect flags', function() {
-      expect(impliesNoTimeouts('debug'), 'to be true');
+    it('should return true for inspect flags', function() {
       expect(impliesNoTimeouts('inspect'), 'to be true');
-      expect(impliesNoTimeouts('debug-brk'), 'to be true');
       expect(impliesNoTimeouts('inspect-brk'), 'to be true');
+    });
+  });
+
+  describe('unparseNodeFlags()', function() {
+    it('should handle single v8 flags', function() {
+      expect(unparseNodeFlags({'v8-numeric': 100}), 'to equal', [
+        '--v8-numeric=100'
+      ]);
+      expect(unparseNodeFlags({'v8-boolean': true}), 'to equal', [
+        '--v8-boolean'
+      ]);
+    });
+
+    it('should handle multiple v8 flags', function() {
+      expect(
+        unparseNodeFlags({'v8-numeric-one': 1, 'v8-numeric-two': 2}),
+        'to equal',
+        ['--v8-numeric-one=1', '--v8-numeric-two=2']
+      );
+      expect(
+        unparseNodeFlags({'v8-boolean-one': true, 'v8-boolean-two': true}),
+        'to equal',
+        ['--v8-boolean-one', '--v8-boolean-two']
+      );
+      expect(
+        unparseNodeFlags({
+          'v8-boolean-one': true,
+          'v8-numeric-one': 1,
+          'v8-boolean-two': true
+        }),
+        'to equal',
+        ['--v8-boolean-one', '--v8-numeric-one=1', '--v8-boolean-two']
+      );
+      expect(
+        unparseNodeFlags({
+          'v8-numeric-one': 1,
+          'v8-boolean-one': true,
+          'v8-numeric-two': 2
+        }),
+        'to equal',
+        ['--v8-numeric-one=1', '--v8-boolean-one', '--v8-numeric-two=2']
+      );
     });
   });
 });

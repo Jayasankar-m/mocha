@@ -58,7 +58,7 @@ describe('file utils', function() {
       ex.and('to have length', expectedLength);
     });
 
-    it('should parse extensions from extnsions parameter', function() {
+    it('should parse extensions from extensions parameter', function() {
       var nonJsFile = tmpFile('mocha-utils-text.txt');
       fs.writeFileSync(nonJsFile, 'yippy skippy ying yang yow');
 
@@ -66,9 +66,42 @@ describe('file utils', function() {
       expect(res, 'to contain', nonJsFile).and('to have length', 1);
     });
 
-    it('should not require the extensions parameter when looking up a file', function() {
-      var res = utils.lookupFiles(tmpFile('mocha-utils'), undefined, false);
-      expect(res, 'to be', tmpFile('mocha-utils.js'));
+    it('should return only the ".js" file', function() {
+      var TsFile = tmpFile('mocha-utils.ts');
+      fs.writeFileSync(TsFile, 'yippy skippy ying yang yow');
+
+      var res = utils
+        .lookupFiles(tmpFile('mocha-utils'), ['js'], false)
+        .map(path.normalize.bind(path));
+      expect(res, 'to contain', tmpFile('mocha-utils.js')).and(
+        'to have length',
+        1
+      );
+    });
+
+    it('should return ".js" and ".ts" files', function() {
+      var TsFile = tmpFile('mocha-utils.ts');
+      fs.writeFileSync(TsFile, 'yippy skippy ying yang yow');
+
+      var res = utils
+        .lookupFiles(tmpFile('mocha-utils'), ['js', 'ts'], false)
+        .map(path.normalize.bind(path));
+      expect(
+        res,
+        'to contain',
+        tmpFile('mocha-utils.js'),
+        tmpFile('mocha-utils.ts')
+      ).and('to have length', 2);
+    });
+
+    it('should require the extensions parameter when looking up a file', function() {
+      var dirLookup = function() {
+        return utils.lookupFiles(tmpFile('mocha-utils'), undefined, false);
+      };
+      expect(dirLookup, 'to throw', {
+        name: 'Error',
+        code: 'ERR_MOCHA_NO_FILES_MATCH_PATTERN'
+      });
     });
 
     it('should require the extensions parameter when looking up a directory', function() {
@@ -80,30 +113,6 @@ describe('file utils', function() {
         code: 'ERR_MOCHA_INVALID_ARG_TYPE',
         argument: 'extensions'
       });
-    });
-  });
-
-  describe('.files', function() {
-    it('should return broken symlink file path', function() {
-      if (!symlinkSupported) {
-        return this.skip();
-      }
-      expect(
-        utils.files(tmpDir, ['js']),
-        'to contain',
-        tmpFile('mocha-utils-link.js'),
-        tmpFile('mocha-utils.js')
-      ).and('to have length', 2);
-
-      expect(existsSync(tmpFile('mocha-utils-link.js')), 'to be', true);
-
-      fs.renameSync(tmpFile('mocha-utils.js'), tmpFile('bob'));
-
-      expect(existsSync(tmpFile('mocha-utils-link.js')), 'to be', false);
-
-      expect(utils.files(tmpDir, ['js']), 'to equal', [
-        tmpFile('mocha-utils-link.js')
-      ]);
     });
   });
 

@@ -5,6 +5,8 @@ var fs = require('fs');
 var crypto = require('crypto');
 var path = require('path');
 var run = require('./helpers').runMocha;
+var utils = require('../../lib/utils');
+var dQuote = utils.dQuote;
 
 describe('reporters', function() {
   describe('markdown', function() {
@@ -134,7 +136,7 @@ describe('reporters', function() {
     describe('produces valid TAP v13 output', function() {
       var runFixtureAndValidateOutput = function(fixture, expected) {
         it('for ' + fixture, function(done) {
-          var args = ['--reporter=tap', '--reporter-options', 'tapVersion=13'];
+          var args = ['--reporter=tap', '--reporter-option', 'tapVersion=13'];
 
           run(fixture, args, function(err, res) {
             if (err) {
@@ -196,8 +198,38 @@ describe('reporters', function() {
       });
     });
 
+    it('should fail if given invalid `tapVersion`', function(done) {
+      var invalidTapVersion = 'nosuch';
+      var args = [
+        '--reporter=tap',
+        '--reporter-option',
+        'tapVersion=' + invalidTapVersion
+      ];
+
+      run(
+        'reporters.fixture.js',
+        args,
+        function(err, res) {
+          if (err) {
+            done(err);
+            return;
+          }
+
+          var pattern =
+            '^Error: invalid or unsupported TAP version: ' +
+            dQuote(invalidTapVersion);
+          expect(res, 'to satisfy', {
+            code: 1,
+            output: new RegExp(pattern, 'm')
+          });
+          done();
+        },
+        {stdio: 'pipe'}
+      );
+    });
+
     it('places exceptions correctly in YAML blocks', function(done) {
-      var args = ['--reporter=tap', '--reporter-options', 'tapVersion=13'];
+      var args = ['--reporter=tap', '--reporter-option', 'tapVersion=13'];
 
       run('reporters.fixture.js', args, function(err, res) {
         if (err) {

@@ -1,13 +1,17 @@
 'use strict';
 
+var sinon = require('sinon');
 var Mocha = require('../../');
 var Suite = Mocha.Suite;
 var Runner = Mocha.Runner;
 var Test = Mocha.Test;
 
-describe('json reporter', function() {
-  var suite, runner;
+describe('JSON reporter', function() {
+  var sandbox;
+  var suite;
+  var runner;
   var testTitle = 'json test 1';
+  var noop = function() {};
 
   beforeEach(function() {
     var mocha = new Mocha({
@@ -15,8 +19,18 @@ describe('json reporter', function() {
     });
     suite = new Suite('JSON suite', 'root');
     runner = new Runner(suite);
+    var options = {};
     /* eslint no-unused-vars: off */
-    var mochaReporter = new mocha._reporter(runner);
+    var mochaReporter = new mocha._reporter(runner, options);
+  });
+
+  beforeEach(function() {
+    sandbox = sinon.createSandbox();
+    sandbox.stub(process.stdout, 'write').callsFake(noop);
+  });
+
+  afterEach(function() {
+    sandbox.restore();
   });
 
   it('should have 1 test failure', function(done) {
@@ -29,6 +43,7 @@ describe('json reporter', function() {
     );
 
     runner.run(function(failureCount) {
+      sandbox.restore();
       expect(runner, 'to satisfy', {
         testResults: {
           failures: [
@@ -50,6 +65,7 @@ describe('json reporter', function() {
     suite.addTest(new Test(testTitle));
 
     runner.run(function(failureCount) {
+      sandbox.restore();
       expect(runner, 'to satisfy', {
         testResults: {
           pending: [
@@ -79,6 +95,7 @@ describe('json reporter', function() {
     );
 
     runner.run(function(failureCount) {
+      sandbox.restore();
       expect(runner, 'to satisfy', {
         testResults: {
           failures: [

@@ -21,9 +21,12 @@ overrides:
       - package-scripts.js
       - karma.conf.js
       - .wallaby.js
+      - .eleventy.js
       - bin/*
       - lib/cli/**/*.js
       - test/node-unit/**/*.js
+      - test/integration/options/watch.spec.js
+      - test/integration/helpers.js
       - lib/growl.js
     parserOptions:
       ecmaVersion: 6
@@ -37,8 +40,8 @@ overrides:
     globals:
       expect: no
   - files:
-    - bin/*
-    - lib/**/*.js
+      - bin/*
+      - lib/**/*.js
     rules:
       no-restricted-globals:
         - error
@@ -76,3 +79,12 @@ overrides:
     parserOptions:
       ecmaVersion: 6
       sourceType: module
+
+  - files:
+      - lib/reporters/*.js
+    rules:
+      no-restricted-syntax:
+        - error
+        # disallow Reporters using `console.log()`
+        - selector: 'CallExpression[callee.object.name=console][callee.property.name=log]'
+          message: &GH-3604 See https://github.com/mochajs/mocha/issues/3604

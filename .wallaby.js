@@ -17,13 +17,13 @@ module.exports = () => {
       },
       'package.json',
       'test/opts/mocha.opts',
-      'mocharc.yml',
-      '!lib/browser/**/*.js',
+      'mocharc.yml'
     ],
     filesWithNoCoverageCalculated: [
       'test/**/*.fixture.js',
       'test/setup.js',
-      'test/assertions.js'
+      'test/assertions.js',
+      'lib/browser/**/*.js'
     ],
     tests: ['test/unit/**/*.spec.js', 'test/node-unit/**/*.spec.js'],
     env: {
@@ -38,8 +38,14 @@ module.exports = () => {
       const runningMocha = wallaby.testFramework;
       runningMocha.timeout(200);
       // to expose it/describe etc. on the mocha under test
-      const mochaUnderTest = new (require('./'))();
-      mochaUnderTest.suite.emit('pre-require', global, '', mochaUnderTest);
+      const MochaUnderTest = require('./');
+      const mochaUnderTest = new MochaUnderTest();
+      mochaUnderTest.suite.emit(
+        MochaUnderTest.Suite.constants.EVENT_FILE_PRE_REQUIRE,
+        global,
+        '',
+        mochaUnderTest
+      );
       // to make test/node-unit/color.spec.js pass, we need to run mocha in the project's folder context
       const childProcess = require('child_process');
       const execFile = childProcess.execFile;
@@ -53,6 +59,7 @@ module.exports = () => {
         return execFile.apply(this, arguments);
       };
       require('./test/setup');
-    }
+    },
+    debug: true
   };
 };

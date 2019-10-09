@@ -669,4 +669,99 @@ describe('lib/utils', function() {
       expect(process.emitWarning, 'was not called');
     });
   });
+
+  describe('warn', function() {
+    var emitWarning;
+
+    beforeEach(function() {
+      if (process.emitWarning) {
+        emitWarning = process.emitWarning;
+        sandbox.stub(process, 'emitWarning');
+      } else {
+        process.emitWarning = sandbox.spy();
+      }
+    });
+
+    afterEach(function() {
+      // if this is not set, then we created it, so we should remove it.
+      if (!emitWarning) {
+        delete process.emitWarning;
+      }
+    });
+
+    it('should call process.emitWarning', function() {
+      utils.warn('foo');
+      expect(process.emitWarning, 'was called times', 1);
+    });
+
+    it('should not cache messages', function() {
+      utils.warn('foo');
+      utils.warn('foo');
+      expect(process.emitWarning, 'was called times', 2);
+    });
+
+    it('should ignore falsy messages', function() {
+      utils.warn('');
+      expect(process.emitWarning, 'was not called');
+    });
+  });
+
+  describe('sQuote/dQuote', function() {
+    var str = 'xxx';
+
+    it('should return its input as string wrapped in single quotes', function() {
+      var expected = "'xxx'";
+      expect(utils.sQuote(str), 'to be', expected);
+    });
+
+    it('should return its input as string wrapped in double quotes', function() {
+      var expected = '"xxx"';
+      expect(utils.dQuote(str), 'to be', expected);
+    });
+  });
+
+  describe('ngettext', function() {
+    var singular = 'singular';
+    var plural = 'plural';
+
+    it("should return plural string if 'n' is 0", function() {
+      expect(utils.ngettext(0, singular, plural), 'to be', plural);
+    });
+
+    it("should return singular string if 'n' is 1", function() {
+      expect(utils.ngettext(1, singular, plural), 'to be', singular);
+    });
+
+    it("should return plural string if 'n' is greater than 1", function() {
+      var arr = ['aaa', 'bbb'];
+      expect(utils.ngettext(arr.length, singular, plural), 'to be', plural);
+    });
+
+    it("should return undefined if 'n' is not a non-negative integer", function() {
+      expect(utils.ngettext('', singular, plural), 'to be undefined');
+      expect(utils.ngettext(-1, singular, plural), 'to be undefined');
+      expect(utils.ngettext(true, singular, plural), 'to be undefined');
+      expect(utils.ngettext({}, singular, plural), 'to be undefined');
+    });
+  });
+
+  describe('createMap', function() {
+    it('should return an object with a null prototype', function() {
+      expect(Object.getPrototypeOf(utils.createMap()), 'to be', null);
+    });
+
+    it('should add props to the object', function() {
+      expect(utils.createMap({foo: 'bar'}), 'to exhaustively satisfy', {
+        foo: 'bar'
+      });
+    });
+
+    it('should add props from all object parameters to the object', function() {
+      expect(
+        utils.createMap({foo: 'bar'}, {bar: 'baz'}),
+        'to exhaustively satisfy',
+        {foo: 'bar', bar: 'baz'}
+      );
+    });
+  });
 });

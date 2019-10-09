@@ -23,7 +23,7 @@ function test(testName, mochaParams) {
 module.exports = {
   scripts: {
     build: {
-      script: `browserify -e browser-entry.js --plugin ./scripts/dedefine --ignore 'fs' --ignore 'glob' --ignore 'path' --ignore 'supports-color' -o mocha.js`,
+      script: `browserify -e browser-entry.js --plugin ./scripts/dedefine --ignore 'fs' --ignore 'glob' --ignore 'path' --ignore 'supports-color' --ignore chokidar -o mocha.js`,
       description: 'Build browser bundle'
     },
     lint: {
@@ -115,7 +115,7 @@ module.exports = {
         integration: {
           script: test(
             'integration',
-            '--timeout 10000 --slow 3750 "test/integration/*.spec.js"'
+            '--timeout 10000 --slow 3750 "test/integration/**/*.spec.js"'
           ),
           description: 'Run Node.js integration tests',
           hiddenFromHelp: true
@@ -217,26 +217,26 @@ module.exports = {
           description: 'Run browser tests'
         },
         unit: {
-          script: 'NODE_PATH=. karma start --single-run',
+          script: 'cross-env NODE_PATH=. karma start --single-run',
           description: 'Run browser unit tests'
         },
         bdd: {
-          script: 'MOCHA_TEST=bdd nps test.browser.unit',
+          script: 'cross-env MOCHA_TEST=bdd nps test.browser.unit',
           description: 'Run browser BDD interface tests',
           hiddenFromHelp: true
         },
         tdd: {
-          script: 'MOCHA_TEST=tdd nps test.browser.unit',
+          script: 'cross-env MOCHA_TEST=tdd nps test.browser.unit',
           description: 'Run browser TDD interface tests',
           hiddenFromHelp: true
         },
         qunit: {
-          script: 'MOCHA_TEST=qunit nps test.browser.unit',
+          script: 'cross-env MOCHA_TEST=qunit nps test.browser.unit',
           description: 'Run browser QUnit interface tests',
           hiddenFromHelp: true
         },
         esm: {
-          script: 'MOCHA_TEST=esm nps test.browser.unit',
+          script: 'cross-env MOCHA_TEST=esm nps test.browser.unit',
           description: 'Run browser ES modules support test',
           hiddenFromHelp: true
         }
@@ -266,36 +266,45 @@ module.exports = {
     docs: {
       default: {
         script:
-          'nps docs.prebuild && bundle exec jekyll build --source ./docs --destination ./docs/_site --config ./docs/_config.yml --safe --drafts && nps docs.postbuild',
+          'nps docs.prebuild && nps docs.api && eleventy && nps docs.linkcheck && nps docs.postbuild',
         description: 'Build documentation'
       },
       prebuild: {
-        script:
-          'rimraf docs/_dist docs/api && nps docs.preprocess && nps docs.api',
+        script: 'rimraf docs/_dist docs/_site && nps docs.preprocess',
         description: 'Prepare system for doc building',
         hiddenFromHelp: true
       },
+      linkcheck: {
+        script:
+          'hyperlink -ri --canonicalroot https://mochajs.org --skip ".js.html#line" docs/_site/index.html'
+      },
       postbuild: {
         script:
-          'mkdirp docs/_dist && buildProduction docs/_site/index.html --outroot docs/_dist --canonicalroot https://mochajs.org/ --optimizeimages --svgo --inlinehtmlimage 9400 --inlinehtmlscript 0 --asyncscripts && cp docs/_headers docs/_dist/_headers && node scripts/netlify-headers.js >> docs/_dist/_headers',
+          'buildProduction docs/_site/index.html --outroot docs/_dist --canonicalroot https://mochajs.org/ --optimizeimages --svgo --inlinehtmlimage 9400 --inlinehtmlscript 0 --asyncscripts && cp docs/_headers docs/_dist/_headers && node scripts/netlify-headers.js >> docs/_dist/_headers',
         description: 'Post-process docs after build',
         hiddenFromHelp: true
       },
       preprocess: {
-        script:
-          'md-magic --config ./scripts/markdown-magic.config.js --path docs/index.md',
-        description: 'Preprocess documenation',
-        hiddenFromHelp: true
+        default: {
+          script:
+            'md-magic --config ./scripts/markdown-magic.config.js --path docs/index.md',
+          description: 'Preprocess documentation',
+          hiddenFromHelp: true
+        },
+        api: {
+          script:
+            'md-magic --config ./scripts/markdown-magic.config.js --path "docs/api-tutorials/*.md"',
+          description: 'Preprocess API documentation',
+          hiddenFromHelp: true
+        }
       },
       watch: {
-        script:
-          'nps docs.preprocess && bundle exec jekyll serve --source ./docs --destination ./docs/_site --config ./docs/_config.yml --safe --drafts --watch',
+        script: 'nps docs.preprocess && eleventy --serve',
         description: 'Watch docs for changes & build'
       },
       api: {
-        script:
-          'mkdirp docs/api && jsdoc -c jsdoc.conf.json && cp LICENSE docs/api',
-        description: 'build api docs'
+        script: 'nps docs.preprocess.api && jsdoc -c jsdoc.conf.json',
+        description: 'Build API docs'
       }
     },
     updateContributors: {
