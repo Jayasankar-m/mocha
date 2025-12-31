@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
-var sinon = require('sinon');
-var events = require('../../').Runner.constants;
-var helpers = require('./helpers');
-var reporters = require('../../').reporters;
+var sinon = require("sinon");
+var events = require("../../").Runner.constants;
+var helpers = require("./helpers");
+var reporters = require("../../").reporters;
 
 var Base = reporters.Base;
 var List = reporters.List;
@@ -17,199 +17,197 @@ var EVENT_TEST_FAIL = events.EVENT_TEST_FAIL;
 var EVENT_TEST_PASS = events.EVENT_TEST_PASS;
 var EVENT_TEST_PENDING = events.EVENT_TEST_PENDING;
 
-describe('List reporter', function() {
-  var sandbox;
+describe("List reporter", function () {
   var runReporter = makeRunReporter(List);
-  var expectedTitle = 'some title';
+  var expectedTitle = "some title";
   var expectedDuration = 100;
-  var noop = function() {};
+  var noop = function () {};
   var test = {
-    fullTitle: function() {
+    fullTitle: function () {
       return expectedTitle;
     },
     duration: expectedDuration,
-    slow: noop
+    slow: noop,
   };
 
-  beforeEach(function() {
-    sandbox = sinon.createSandbox();
-    sandbox.stub(Base, 'useColors').value(false);
+  beforeEach(function () {
+    sinon.stub(Base, "useColors").value(false);
   });
 
-  afterEach(function() {
-    sandbox.restore();
+  afterEach(function () {
+    sinon.restore();
   });
 
-  describe('event handlers', function() {
-    describe("on 'start' and 'test' events", function() {
-      it('should write expected newline and title', function() {
+  describe("event handlers", function () {
+    describe("on 'start' and 'test' events", function () {
+      it("should write expected newline and title", function () {
         var runner = createMockRunner(
-          'start test',
+          "start test",
           EVENT_RUN_BEGIN,
           EVENT_TEST_BEGIN,
           null,
-          test
+          test,
         );
         var options = {};
         var fakeThis = {
-          epilogue: noop
+          epilogue: noop,
         };
         var stdout = runReporter(fakeThis, runner, options);
-        sandbox.restore();
+        sinon.restore();
 
-        var startString = '\n';
-        var testString = '    ' + expectedTitle + ': ';
+        var startString = "\n";
+        var testString = "    " + expectedTitle + ": ";
         var expectedArray = [startString, testString];
-        expect(stdout, 'to equal', expectedArray);
+        expect(stdout, "to equal", expectedArray);
       });
     });
 
-    describe("on 'pending' event", function() {
-      it('should write expected title', function() {
+    describe("on 'pending' event", function () {
+      it("should write expected title", function () {
         var runner = createMockRunner(
-          'pending test',
+          "pending test",
           EVENT_TEST_PENDING,
           null,
           null,
-          test
+          test,
         );
         var options = {};
         var fakeThis = {
-          epilogue: noop
+          epilogue: noop,
         };
         var stdout = runReporter(fakeThis, runner, options);
-        sandbox.restore();
+        sinon.restore();
 
-        expect(stdout[0], 'to equal', '  - ' + expectedTitle + '\n');
+        expect(stdout[0], "to equal", "  - " + expectedTitle + "\n");
       });
     });
 
-    describe("on 'pass' event", function() {
+    describe("on 'pass' event", function () {
       var crStub;
 
-      beforeEach(function() {
-        crStub = sandbox.stub(Base.cursor, 'CR').callsFake(noop);
+      beforeEach(function () {
+        crStub = sinon.stub(Base.cursor, "CR").callsFake(noop);
       });
 
-      it('should call cursor CR', function() {
+      it("should call cursor CR", function () {
         var runner = createMockRunner(
-          'pass',
+          "pass",
           EVENT_TEST_PASS,
           null,
           null,
-          test
+          test,
         );
         var options = {};
         var fakeThis = {
-          epilogue: noop
+          epilogue: noop,
         };
         runReporter(fakeThis, runner, options);
-        sandbox.restore();
+        sinon.restore();
 
-        expect(crStub.called, 'to be true');
+        expect(crStub.called, "to be true");
       });
 
-      it('should write expected symbol, title, and duration', function() {
-        var expectedOkSymbol = 'OK';
-        sandbox.stub(Base.symbols, 'ok').value(expectedOkSymbol);
+      it("should write expected symbol, title, and duration", function () {
+        var expectedOkSymbol = "OK";
+        sinon.stub(Base.symbols, "ok").value(expectedOkSymbol);
 
         var runner = createMockRunner(
-          'pass',
+          "pass",
           EVENT_TEST_PASS,
           null,
           null,
-          test
+          test,
         );
         var options = {};
         var fakeThis = {
-          epilogue: noop
+          epilogue: noop,
         };
         var stdout = runReporter(fakeThis, runner, options);
-        sandbox.restore();
+        sinon.restore();
 
         expect(
           stdout[0],
-          'to be',
-          '  ' +
+          "to be",
+          "  " +
             expectedOkSymbol +
-            ' ' +
+            " " +
             expectedTitle +
-            ': ' +
+            ": " +
             expectedDuration +
-            'ms\n'
+            "ms\n",
         );
       });
     });
 
-    describe("on 'fail' event", function() {
+    describe("on 'fail' event", function () {
       var crStub;
 
-      beforeEach(function() {
-        crStub = sandbox.stub(Base.cursor, 'CR').callsFake(noop);
+      beforeEach(function () {
+        crStub = sinon.stub(Base.cursor, "CR").callsFake(noop);
       });
 
-      it('should call cursor CR', function() {
+      it("should call cursor CR", function () {
         var runner = createMockRunner(
-          'fail',
+          "fail",
           EVENT_TEST_FAIL,
           null,
           null,
-          test
+          test,
         );
         var options = {};
         var fakeThis = {
-          epilogue: noop
+          epilogue: noop,
         };
         runReporter(fakeThis, runner, options);
-        sandbox.restore();
+        sinon.restore();
 
-        expect(crStub.called, 'to be true');
+        expect(crStub.called, "to be true");
       });
 
-      it('should write expected error number and title', function() {
+      it("should write expected error number and title", function () {
         var expectedErrorCount = 1;
         var runner = createMockRunner(
-          'fail',
+          "fail",
           EVENT_TEST_FAIL,
           null,
           null,
-          test
+          test,
         );
         var options = {};
         var fakeThis = {
-          epilogue: noop
+          epilogue: noop,
         };
         var stdout = runReporter(fakeThis, runner, options);
-        sandbox.restore();
+        sinon.restore();
 
         expect(
           stdout[0],
-          'to be',
-          '  ' + expectedErrorCount + ') ' + expectedTitle + '\n'
+          "to be",
+          "  " + expectedErrorCount + ") " + expectedTitle + "\n",
         );
       });
 
-      it('should immediately construct fail strings', function() {
-        var actual = {a: 'actual'};
-        var expected = {a: 'expected'};
+      it("should immediately construct fail strings", function () {
+        var actual = { a: "actual" };
+        var expected = { a: "expected" };
         var checked = false;
         var err;
         test = {};
 
         var runner = createMockRunner(
-          'fail',
+          "fail",
           EVENT_TEST_FAIL,
           null,
           null,
-          test
+          test,
         );
-        runner.on = runner.once = function(event, callback) {
+        runner.on = runner.once = function (event, callback) {
           if (
             !checked &&
-            event === 'fail' &&
-            callback.toString().includes('stringifyDiffObjs') // target correct fail event callback
+            event === "fail" &&
+            callback.toString().includes("stringifyDiffObjs") // target correct fail event callback
           ) {
-            err = new Error('fake failure object with actual/expected');
+            err = new Error("fake failure object with actual/expected");
             err.actual = actual;
             err.expected = expected;
             err.showDiff = true;
@@ -219,27 +217,27 @@ describe('List reporter', function() {
         };
         var options = {};
         var fakeThis = {
-          epilogue: noop
+          epilogue: noop,
         };
         runReporter(fakeThis, runner, options);
-        sandbox.restore();
+        sinon.restore();
 
-        expect(typeof err.actual, 'to be', 'string');
-        expect(typeof err.expected, 'to be', 'string');
+        expect(typeof err.actual, "to be", "string");
+        expect(typeof err.expected, "to be", "string");
       });
     });
 
-    describe("on 'end' event", function() {
-      it('should call epilogue', function() {
-        var runner = createMockRunner('end', EVENT_RUN_END);
+    describe("on 'end' event", function () {
+      it("should call epilogue", function () {
+        var runner = createMockRunner("end", EVENT_RUN_END);
         var options = {};
         var fakeThis = {
-          epilogue: sinon.spy()
+          epilogue: sinon.spy(),
         };
         runReporter(fakeThis, runner, options);
-        sandbox.restore();
+        sinon.restore();
 
-        expect(fakeThis.epilogue.calledOnce, 'to be true');
+        expect(fakeThis.epilogue.calledOnce, "to be true");
       });
     });
   });

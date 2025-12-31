@@ -1,10 +1,18 @@
 {
-  "reporter": [
-    "json",
-    "text-summary"
-  ],
+  "reporter": ["json", "text-summary"],
   "exclude": [
-    "lib/browser",
-    "test/**/*"
+    "coverage/**",
+    "docs/**",
+    "packages/*/test{,s}/**",
+    "**/*.d.ts",
+    "test{,s}/**",
+    "test{,-*}.{js,cjs,mjs,ts}",
+    "**/*{.,-}test.{js,cjs,mjs,ts}",
+    "**/__tests__/**",
+    "**/{karma,rollup,webpack}.config.js",
+    "**/{babel.config,.eslintrc,.mocharc}.{js,cjs}",
+    "lib/browser/**",
+    "package-scripts.js",
+    "scripts/**"
   ]
 }

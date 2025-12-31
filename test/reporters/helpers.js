@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-var sinon = require('sinon');
-var errors = require('../../lib/errors');
-var createStatsCollector = require('../../lib/stats-collector');
+var sinon = require("sinon");
+var errors = require("../../lib/errors");
+var createStatsCollector = require("../../lib/stats-collector");
 
 var createUnsupportedError = errors.createUnsupportedError;
 
@@ -24,11 +24,11 @@ function createMockRunner(runStr, ifStr1, ifStr2, ifStr3, arg1, arg2) {
     ifStr2,
     ifStr3,
     arg1,
-    arg2
+    arg2,
   );
   var mockRunner = {
     on: runnerFunction,
-    once: runnerFunction
+    once: runnerFunction,
   };
   createStatsCollector(mockRunner);
   return mockRunner;
@@ -51,37 +51,37 @@ function createMockRunner(runStr, ifStr1, ifStr2, ifStr3, arg1, arg2) {
 function createRunnerFunction(runStr, ifStr1, ifStr2, ifStr3, arg1, arg2) {
   var test = null;
   switch (runStr) {
-    case 'start':
-    case 'pending':
-    case 'end':
-      return function(event, callback) {
+    case "start":
+    case "pending":
+    case "end":
+      return function (event, callback) {
         if (event === ifStr1) {
           callback();
         }
       };
-    case 'pending test':
-    case 'pass':
-    case 'fail':
-    case 'suite':
-    case 'suite end':
-    case 'test end':
+    case "pending test":
+    case "pass":
+    case "fail":
+    case "suite":
+    case "suite end":
+    case "test end":
       test = arg1;
-      return function(event, callback) {
+      return function (event, callback) {
         if (event === ifStr1) {
           callback(test);
         }
       };
-    case 'fail two args':
+    case "fail two args":
       test = arg1;
       var expectedError = arg2;
-      return function(event, callback) {
+      return function (event, callback) {
         if (event === ifStr1) {
           callback(test, expectedError);
         }
       };
-    case 'start test':
+    case "start test":
       test = arg1;
-      return function(event, callback) {
+      return function (event, callback) {
         if (event === ifStr1) {
           callback();
         }
@@ -89,9 +89,9 @@ function createRunnerFunction(runStr, ifStr1, ifStr2, ifStr3, arg1, arg2) {
           callback(test);
         }
       };
-    case 'suite suite end':
+    case "suite suite end":
       var expectedSuite = arg1;
-      return function(event, callback) {
+      return function (event, callback) {
         if (event === ifStr1) {
           callback(expectedSuite);
         }
@@ -102,9 +102,9 @@ function createRunnerFunction(runStr, ifStr1, ifStr2, ifStr3, arg1, arg2) {
           callback();
         }
       };
-    case 'pass end':
+    case "pass end":
       test = arg1;
-      return function(event, callback) {
+      return function (event, callback) {
         if (event === ifStr1) {
           callback(test);
         }
@@ -112,10 +112,10 @@ function createRunnerFunction(runStr, ifStr1, ifStr2, ifStr3, arg1, arg2) {
           callback();
         }
       };
-    case 'test end fail':
+    case "test end fail":
       test = arg1;
       var error = arg2;
-      return function(event, callback) {
+      return function (event, callback) {
         if (event === ifStr1) {
           callback();
         }
@@ -123,8 +123,8 @@ function createRunnerFunction(runStr, ifStr1, ifStr2, ifStr3, arg1, arg2) {
           callback(test, error);
         }
       };
-    case 'fail end pass':
-      return function(event, callback) {
+    case "fail end pass":
+      return function (event, callback) {
         test = arg1;
         if (event === ifStr1) {
           callback(test, {});
@@ -138,24 +138,24 @@ function createRunnerFunction(runStr, ifStr1, ifStr2, ifStr3, arg1, arg2) {
       };
     default:
       throw createUnsupportedError(
-        'This function does not support the runner string specified.'
+        "This function does not support the runner string specified.",
       );
   }
 }
 
 function makeTest(err) {
   return {
-    err: err,
-    titlePath: function() {
-      return ['test title'];
-    }
+    err,
+    titlePath: function () {
+      return ["test title"];
+    },
   };
 }
 
 function createElements(argObj) {
   var res = [];
   for (var i = argObj.from; i <= argObj.to; i++) {
-    res.push('element ' + i);
+    res.push("element " + i);
   }
   return res;
 }
@@ -163,20 +163,21 @@ function createElements(argObj) {
 function makeExpectedTest(
   expectedTitle,
   expectedFullTitle,
+  expectedFile,
   expectedDuration,
   currentRetry,
-  expectedBody
 ) {
   return {
     title: expectedTitle,
-    fullTitle: function() {
+    fullTitle: function () {
       return expectedFullTitle;
     },
+    file: expectedFile,
     duration: expectedDuration,
-    currentRetry: function() {
+    currentRetry: function () {
       return currentRetry;
     },
-    slow: function() {}
+    slow: function () {},
   };
 }
 
@@ -196,12 +197,12 @@ function createRunReporterFunction(ctor) {
    * @param {boolean} [tee=false] - Whether to echo output to screen
    * @return {string[]} Lines of output written to `stdout`
    */
-  var runReporter = function(stubSelf, runner, options, tee) {
+  var runReporter = function (stubSelf, runner, options, tee) {
     var origStdoutWrite = process.stdout.write;
-    var stdoutWriteStub = sinon.stub(process.stdout, 'write');
+    var stdoutWriteStub = sinon.stub(process.stdout, "write");
     var stdout = [];
 
-    var gather = function(chunk, enc, callback) {
+    var gather = function (chunk) {
       stdout.push(chunk);
       if (tee) {
         origStdoutWrite.call(process.stdout, chunk);
@@ -215,16 +216,12 @@ function createRunReporterFunction(ctor) {
     Object.setPrototypeOf(stubSelf, ctor.prototype);
 
     try {
-      try {
-        // Invoke reporter
-        ctor.call(stubSelf, runner, options);
-      } finally {
-        // Revert stream reassignment here so reporter output
-        // can't be corrupted if any test assertions throw
-        stdoutWriteStub.restore();
-      }
-    } catch (err) {
-      throw err; // Rethrow
+      // Invoke reporter
+      ctor.call(stubSelf, runner, options);
+    } finally {
+      // Revert stream reassignment here so reporter output
+      // can't be corrupted if any test assertions throw
+      stdoutWriteStub.restore();
     }
 
     return stdout;
@@ -234,9 +231,9 @@ function createRunReporterFunction(ctor) {
 }
 
 module.exports = {
-  createElements: createElements,
-  createMockRunner: createMockRunner,
-  createRunReporterFunction: createRunReporterFunction,
-  makeExpectedTest: makeExpectedTest,
-  makeTest: makeTest
+  createElements,
+  createMockRunner,
+  createRunReporterFunction,
+  makeExpectedTest,
+  makeTest,
 };

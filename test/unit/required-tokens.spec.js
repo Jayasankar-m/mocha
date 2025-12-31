@@ -1,11 +1,10 @@
-'use strict';
+"use strict";
 
-var assert = require('assert');
-var describe = require('../..').describe;
-var it = require('../..').it;
+const assert = require("node:assert");
+const { describe, it } = require("../..");
 
-describe('using imported describe', function() {
-  it('using imported it', function(done) {
+describe('using imported "describe"', function () {
+  it('using imported "it"', function (done) {
     assert.ok(true);
     done();
   });

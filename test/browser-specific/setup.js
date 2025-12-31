@@ -1,8 +1,10 @@
-'use strict';
+"use strict";
 
-process.stdout = require('browser-stdout')();
+process.stdout = require("browser-stdout")();
 
-global.expect = global.weknowhow.expect
+global.expect = require("unexpected")
   .clone()
-  .use(global.weknowhow.unexpectedSinon)
-  .use(global.unexpectedEventEmitter);
+  .use(require("unexpected-set"))
+  .use(require("unexpected-map"))
+  .use(require("unexpected-sinon"))
+  .use(require("unexpected-eventemitter"));
